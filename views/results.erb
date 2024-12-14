@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wyniki Parkrun</title>
+  <style>
+      body {
+          font-family: Arial, sans-serif;
+          background-color: #f4f4f4;
+          color: #333;
+          margin: 0;
+          padding: 20px;
+      }
+
+      h1, h2 {
+          color: #2c3e50;
+      }
+
+      .container {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: space-between;
+      }
+
+      .column {
+          flex: 0 0 48%;
+          margin-bottom: 20px;
+          padding: 10px;
+          background-color: #ffffff;
+          border-radius: 8px;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      ul {
+          list-style-type: none;
+          padding-left: 0;
+      }
+
+      li {
+          margin-bottom: 5px;
+      }
+
+      a {
+          display: inline-block;
+          margin-top: 20px;
+          padding: 10px 20px;
+          background-color: #3498db;
+          color: white;
+          text-decoration: none;
+          border-radius: 5px;
+      }
+
+      a:hover {
+          background-color: #2980b9;
+      }
+  </style>
+</head>
+<body>
+<h1>Statystyki Parkrun</h1>
+
+
+<% total_runners = runners[:runners] %>
+
+
+<div class="container">
+  <div class="column">
+    <% if runners[:unknown_count] > 0 %>
+      <p>Liczba nieznanych uczestników: <%= runners[:unknown_count] %></p>
+    <% end %>
+
+    <p>Liczba uczestniczek: <%= total_runners.select { |a| a[:sex] == "Kobieta" }.count %></p>
+    <p>Liczba uczestników: <%= total_runners.select { |a| a[:sex] == "Mężczyzna" }.count %></p>
+    <p>Liczba debiutantów: <%= total_runners.select { |a| a[:debiut] }.count %></p>
+    <p>Liczba wolontariuszy: <%= volunteers.count %>
+      - <%= volunteers.map { |volunteer| anonymize_name(volunteer) }.join(", ") %></p>
+
+    <% debutants = total_runners.select { |a| a[:debiut] } %>
+    <% if debutants.any? %>
+      <h2>Debiutanci:</h2>
+      <ul>
+        <li>
+          <%= debutants.map { |runner| anonymize_name(runner[:name]) }.join(", ") %>
+        </li>
+      </ul>
+    <% end %>
+
+    <% [1, 25, 50, 100, 250, 500].each do |milestone| %>
+      <p><%= milestone %> parkrunów: <%= total_runners.select { |a| a[:parkruns] == milestone }.count %></p>
+      <% milestone_runners = total_runners.select { |a| a[:parkruns] == milestone } %>
+      <% if milestone_runners.any? %>
+        <ul>
+          <% milestone_runners.each do |runner| %>
+            <li><%= anonymize_name(runner[:name]) %></li>
+          <% end %>
+        </ul>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="column">
+    <h2>Uczestnicy w kategoriach:</h2>
+    <% categories = total_runners.map { |a| a[:category] }.uniq %>
+    <ul>
+      <% categories.each do |category| %>
+        <li><%= category %>: <%= total_runners.select { |a| a[:category] == category }.count %></li>
+      <% end %>
+    </ul>
+
+    <p>Suma parkrunów uczestników: <%= total_runners.map { |a| a[:parkruns] }.sum %></p>
+    <p>Pobite rekordy: <%= total_runners.select { |a| a[:personal_best] }.count %></p>
+    <p>Łącznie uczestników: <%= total_runners.count + runners[:unknown_count] %></p>
+
+    <% if total_runners.any? %>
+      <% avg_time = total_runners.map { |a| a[:time].split(":").first.to_i * 60 + a[:time].split(":").last.to_i }.sum / (total_runners.count + runners[:unknown_count]) %>
+      <p>Średni czas: <%= "#{avg_time / 60}:#{format('%02d', avg_time % 60)}" %></p>
+    <% else %>
+      <p>Brak danych o czasach.</p>
+    <% end %>
+  </div>
+</div>
+
+<a href="/">Prześlij inny plik</a>
+</body>
+</html>
